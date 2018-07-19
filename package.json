@@ -4,7 +4,7 @@
   "description": "creacion e interaccion con la base de datos para el proyecto",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "lint": "standard --fix"
   },
   "repository": {
     "type": "git",
@@ -15,5 +15,8 @@
   "bugs": {
     "url": "https://github.com/AlbertoChamorro/academy-node-db/issues"
   },
-  "homepage": "https://github.com/AlbertoChamorro/academy-node-db#readme"
+  "homepage": "https://github.com/AlbertoChamorro/academy-node-db#readme",
+  "devDependencies": {
+    "standard": "^11.0.1"
+  }
 }
