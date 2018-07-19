@@ -4,7 +4,8 @@
   "description": "creacion e interaccion con la base de datos para el proyecto",
   "main": "index.js",
   "scripts": {
-    "lint": "standard --fix"
+    "lint": "standard --fix",
+    "test": "npm run lint && ava"
   },
   "standard": {
     "parser": "babel-eslint"
@@ -20,6 +21,7 @@
   },
   "homepage": "https://github.com/AlbertoChamorro/academy-node-db#readme",
   "devDependencies": {
+    "ava": "^0.25.0",
     "standard": "^11.0.1"
   },
   "dependencies": {
