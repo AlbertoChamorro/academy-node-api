@@ -1,6 +1,7 @@
 'use strict'
 
 const test = require('ava')
+const utils = require('../common/utils')
 
 test('this should pass', t => {
   t.pass()
@@ -33,3 +34,24 @@ let asyncFunctionToTest = value => {
     return resolve(findValue)
   })
 }
+
+test('extracting hashtags from text', t => {
+  let tags = utils.extractTags('a #picture with tags #AwEsome #App and #AVA and #100 ##yes')
+  t.deepEqual(tags, [
+    'picture',
+    'awesome',
+    'app',
+    'ava',
+    '100',
+    'yes'
+  ])
+
+  tags = utils.extractTags('a picture wihtout any things')
+  t.deepEqual(tags, [])
+
+  tags = utils.extractTags()
+  t.deepEqual(tags, [])
+
+  tags = utils.extractTags(null)
+  t.deepEqual(tags, [])
+})
