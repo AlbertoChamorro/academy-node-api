@@ -3,7 +3,7 @@
 const test = require('ava')
 const r = require('rethinkdb')
 const uuid = require('uuid-base62')
-const Database = require('../db/config')
+const Database = require('../db/database')
 
 const dbName = `academy_db_${uuid.v4()}`
 const db = new Database({ db: dbName })
@@ -18,6 +18,7 @@ test('save image', async t => {
 
   // 'http://programaenlinea.net/wp-content/uploads/2018/02/developer-3.jpg',
   let image = {
+    description: '#awesome good code #123Store',
     url: `http://programaenlinea.net/wp-content/uploads/2018/02/${uuid.uuid()}.jpg`,
     likes: 0,
     liked: false,
@@ -27,8 +28,13 @@ test('save image', async t => {
   let created = await db.saveImage(image)
 
   t.is(created.url, image.url)
+  t.is(created.description, image.description)
   t.is(created.likes, image.likes)
   t.is(created.liked, image.liked)
+  t.deepEqual(created.tags, [
+    'awesome',
+    '123store'
+  ])
   t.is(created.user_id, image.user_id)
 
   t.is(typeof created.id, 'string')
