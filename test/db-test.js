@@ -92,6 +92,19 @@ test('save user in database', async t => {
   t.truthy(created.createdAt)
 })
 
+test('get user in database', async t => {
+  let db = t.context.db
+
+  t.is(typeof db.getUser, 'function', 'getUser is function')
+
+  let user = fixtures.getUser()
+  let created = await db.saveUser(user)
+
+  let result = await db.getUser(created.username)
+
+  t.deepEqual(created, result)
+})
+
 test.afterEach.always('cleanup database', async t => {
   let db = t.context.db
   let dbName = t.context.dbName
