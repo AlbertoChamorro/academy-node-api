@@ -11,7 +11,7 @@ test('this should pass', t => {
 //   t.fail()
 // })
 
-test('it should support async/await', async t => {
+test('it should support async/await 1', async t => {
   let expectedValue = 42
   let promise = Promise.resolve(expectedValue)
   let secret = await promise
@@ -19,7 +19,7 @@ test('it should support async/await', async t => {
   t.is(secret, expectedValue)
 })
 
-test('it should support async/await', async t => {
+test('it should support async/await 2', async t => {
   let expectedValue = 2
   let secret = await asyncFunctionToTest(expectedValue)
 
@@ -54,4 +54,14 @@ test('extracting hashtags from text', t => {
 
   tags = utils.extractTags(null)
   t.deepEqual(tags, [])
+})
+
+test('encrypt password', t => {
+  let password = 'd3v3l0p3r7890$'
+  let encrypted = '10078ab05c7f309252ad377791ecb2be3801e2a95e0edbbe9f81e98c1a732f49'
+
+  t.is(typeof utils.encrypt, 'function', 'encrypt is function')
+  let result = utils.encrypt(password)
+
+  t.is(result, encrypted)
 })
