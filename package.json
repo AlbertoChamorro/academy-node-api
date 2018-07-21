@@ -4,7 +4,11 @@
   "description": "creacion e interaccion con la base de datos para el proyecto",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "lint": "standard --fix",
+    "test": "npm run lint && ava"
+  },
+  "standard": {
+    "parser": "babel-eslint"
   },
   "repository": {
     "type": "git",
@@ -15,5 +19,16 @@
   "bugs": {
     "url": "https://github.com/AlbertoChamorro/academy-node-db/issues"
   },
-  "homepage": "https://github.com/AlbertoChamorro/academy-node-db#readme"
+  "homepage": "https://github.com/AlbertoChamorro/academy-node-db#readme",
+  "devDependencies": {
+    "ava": "^0.25.0",
+    "standard": "^11.0.1"
+  },
+  "dependencies": {
+    "babel-eslint": "^8.2.6",
+    "bluebird": "^3.5.1",
+    "co": "^4.6.0",
+    "rethinkdb": "^2.3.3",
+    "uuid-base62": "^0.1.0"
+  }
 }
