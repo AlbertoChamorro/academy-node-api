@@ -40,6 +40,7 @@ class Database {
 
       if (dbTables.indexOf('images') === -1) {
         yield r.db(_self.dbName).tableCreate('images').run(connect)
+        yield r.db(_self.dbName).table('images').indexCreate('createdAt').run(connect)
       }
 
       if (dbTables.indexOf('users') === -1) {
@@ -125,12 +126,34 @@ class Database {
 
     const _self = this
     const imageId = uuid.decode(id)
-    
+
     let task = co.wrap(function * () {
       let connect = yield _self.connection
       let image = r.db(_self.dbName).table('images').get(imageId).run(connect)
 
       return Promise.resolve(image)
+    })
+
+    return Promise.resolve(task()).asCallback(callback)
+  }
+
+  getImages (callback) {
+    if (!this.connected) {
+      return Promise.reject(new Error('not connected')).asCallback(callback)
+    }
+
+    const _self = this
+
+    let task = co.wrap(function * () {
+      let connect = yield _self.connection
+      let images = yield r.db(_self.dbName).table('images')
+        .orderBy({
+          index: r.desc('createdAt')
+        })
+        .run(connect)
+
+      let result = yield images.toArray()
+      return Promise.resolve(result)
     })
 
     return Promise.resolve(task()).asCallback(callback)

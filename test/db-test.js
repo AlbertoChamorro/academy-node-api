@@ -6,15 +6,18 @@ const uuid = require('uuid-base62')
 const Database = require('../db/database')
 const fixtures = require('./fixtures')
 
-const dbName = `academy_db_${uuid.v4()}`
-const db = new Database({ db: dbName })
+test.beforeEach('init database', async t => {
+  const dbName = `academy_db_${uuid.v4()}`
+  const db = new Database({ db: dbName })
+  t.context.db = db
+  t.context.dbName = dbName
 
-test.before('setup database', async t => {
   await db.connect()
   t.true(db.connected, 'should be connected in database')
 })
 
 test('save image', async t => {
+  let db = t.context.db
   t.is(typeof db.saveImage, 'function', 'saveImage is function')
 
   let image = fixtures.getImage()
@@ -36,6 +39,7 @@ test('save image', async t => {
 })
 
 test('like to image', async t => {
+  let db = t.context.db
   t.is(typeof db.likeImage, 'function', 'likeImage is function')
   let image = fixtures.getImage()
   let created = await db.saveImage(image)
@@ -46,6 +50,7 @@ test('like to image', async t => {
 })
 
 test('get image', async t => {
+  let db = t.context.db
   t.is(typeof db.getImage, 'function', 'getImage is function')
 
   let image = fixtures.getImage()
@@ -55,12 +60,36 @@ test('get image', async t => {
   t.deepEqual(created, result)
 })
 
-test.after('setup database', async t => {
-  await db.disconnect()
-  t.false(db.connected, 'should be disconnected in database')
+test('get all images', async t => {
+  let db = t.context.db
+  let images = fixtures.getImages(5)
+
+  let savedImages = images.map(image => db.saveImage(image))
+  let created = await Promise.all(savedImages)
+
+  t.is(typeof db.getImages, 'function', 'getImages is function')
+
+  let result = await db.getImages()
+
+  t.is(result.length, created.length)
 })
 
-test.after.always('clean up database', async t => {
+test.afterEach.always('cleanup database', async t => {
+  let db = t.context.db
+  let dbName = t.context.dbName
+
+  await db.disconnect()
+  t.false(db.connected, 'should be disconnected in database')
   let connection = await r.connect({ })
   await r.dbDrop(dbName).run(connection)
 })
+
+// test.after('setup database', async t => {
+//   await db.disconnect()
+//   t.false(db.connected, 'should be disconnected in database')
+// })
+
+// test.after.always('clean up database', async t => {
+//   let connection = await r.connect({ })
+//   await r.dbDrop(dbName).run(connection)
+// })

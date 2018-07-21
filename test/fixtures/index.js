@@ -11,6 +11,13 @@ const fixtures = {
       liked: false,
       user_id: uuid.uuid()
     }
+  },
+  getImages (count) {
+    let images = []
+    while (count-- > 0) {
+      images.push(this.getImage())
+    }
+    return images
   }
 }
 
