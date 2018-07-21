@@ -82,10 +82,35 @@ class Database {
 
       image.id = result.generated_keys[0]
       yield r.db(_self.dbName).table('images').get(image.id).update({
-        public_path: uuid.encode(image.id)
+        public_id: uuid.encode(image.id)
       }).run(connect)
 
       let created = yield r.db(_self.dbName).table('images').get(image.id).run(connect)
+
+      return Promise.resolve(created)
+    })
+
+    return Promise.resolve(tasks()).asCallback(callback)
+  }
+
+  likeImage (id, callback) {
+    if (!this.connected) {
+      return Promise.reject(new Error('not connected')).asCallback(callback)
+    }
+
+    const _self = this
+    let imageId = uuid.decode(id)
+
+    let tasks = co.wrap(function * () {
+      let connect = yield _self.connection
+
+      let image = yield r.db(_self.dbName).table('images').get(imageId).run(connect)
+      yield r.db(_self.dbName).table('images').get(imageId).update({
+        likes: image.likes + 1,
+        liked: true
+      }).run(connect)
+
+      let created = yield r.db(_self.dbName).table('images').get(imageId).run(connect)
 
       return Promise.resolve(created)
     })

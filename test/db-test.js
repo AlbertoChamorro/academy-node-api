@@ -4,6 +4,7 @@ const test = require('ava')
 const r = require('rethinkdb')
 const uuid = require('uuid-base62')
 const Database = require('../db/database')
+const fixtures = require('./fixtures')
 
 const dbName = `academy_db_${uuid.v4()}`
 const db = new Database({ db: dbName })
@@ -16,15 +17,7 @@ test.before('setup database', async t => {
 test('save image', async t => {
   t.is(typeof db.saveImage, 'function', 'saveImage is function')
 
-  // 'http://programaenlinea.net/wp-content/uploads/2018/02/developer-3.jpg',
-  let image = {
-    description: '#awesome good code #123Store',
-    url: `http://programaenlinea.net/wp-content/uploads/2018/02/${uuid.uuid()}.jpg`,
-    likes: 0,
-    liked: false,
-    user_id: uuid.uuid()
-  }
-
+  let image = fixtures.getImage()
   let created = await db.saveImage(image)
 
   t.is(created.url, image.url)
@@ -36,9 +29,20 @@ test('save image', async t => {
     '123store'
   ])
   t.is(created.user_id, image.user_id)
-
   t.is(typeof created.id, 'string')
+
+  t.is(created.public_id, uuid.encode(created.id))
   t.truthy(created.createdAt)
+})
+
+test('like to image', async t => {
+  t.is(typeof db.likeImage, 'function', 'likeImage is function')
+  let image = fixtures.getImage()
+  let created = await db.saveImage(image)
+  let result = await db.likeImage(created.public_id)
+
+  t.true(result.liked)
+  t.is(result.likes, image.likes + 1)
 })
 
 test.after('setup database', async t => {
