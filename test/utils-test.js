@@ -7,9 +7,9 @@ test('this should pass', t => {
   t.pass()
 })
 
-test('this should failure', t => {
-  t.fail()
-})
+// test('this should failure', t => {
+//   t.fail()
+// })
 
 test('it should support async/await', async t => {
   let expectedValue = 42

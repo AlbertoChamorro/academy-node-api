@@ -24,6 +24,8 @@ class Database {
       port: self.port
     })
 
+    this.connected = true
+
     const setup = co.wrap(function * () {
       let connect = yield self.connection
       let dbList = yield r.dbList().run(connect)
@@ -46,6 +48,39 @@ class Database {
     })
 
     return Promise.resolve(setup()).asCallback(callback)
+  }
+
+  disconnect (callback) {
+    if (!this.connected) {
+      return Promise.reject(new Error('not connected')).asCallback(callback)
+    }
+
+    this.connected = false
+    return Promise.resolve(this.connection)
+      .then(con => con.close())
+  }
+
+  saveImage (image, callback) {
+    if (!this.connected) {
+      return Promise.reject(new Error('not connected')).asCallback(callback)
+    }
+
+    const _self = this
+
+    let tasks = co.wrap(function * () {
+      let connect = yield _self.connection
+      image.createdAt = new Date()
+
+      let result = yield r.db(_self.db).table('images').insert(image).run(connect)
+
+      if (result.errors > 0) {
+        return Promise.reject(new Error(result.first_error))
+      }
+      image.id = result.generated_keys[0]
+      return Promise.resolve(image)
+    })
+
+    return Promise.resolve(tasks()).asCallback(callback)
   }
 }
 
