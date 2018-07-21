@@ -117,6 +117,24 @@ class Database {
 
     return Promise.resolve(tasks()).asCallback(callback)
   }
+
+  getImage (id, callback) {
+    if (!this.connected) {
+      return Promise.reject(new Error('not connected')).asCallback(callback)
+    }
+
+    const _self = this
+    const imageId = uuid.decode(id)
+    
+    let task = co.wrap(function * () {
+      let connect = yield _self.connection
+      let image = r.db(_self.dbName).table('images').get(imageId).run(connect)
+
+      return Promise.resolve(image)
+    })
+
+    return Promise.resolve(task()).asCallback(callback)
+  }
 }
 
 module.exports = Database

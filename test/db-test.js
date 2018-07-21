@@ -45,6 +45,16 @@ test('like to image', async t => {
   t.is(result.likes, image.likes + 1)
 })
 
+test('get image', async t => {
+  t.is(typeof db.getImage, 'function', 'getImage is function')
+
+  let image = fixtures.getImage()
+  let created = await db.saveImage(image)
+  let result = await db.getImage(created.public_id)
+
+  t.deepEqual(created, result)
+})
+
 test.after('setup database', async t => {
   await db.disconnect()
   t.false(db.connected, 'should be disconnected in database')
