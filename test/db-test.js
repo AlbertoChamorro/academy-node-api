@@ -5,6 +5,7 @@ const r = require('rethinkdb')
 const uuid = require('uuid-base62')
 const Database = require('../db/database')
 const fixtures = require('./fixtures')
+const utils = require('../common/utils')
 
 test.beforeEach('init database', async t => {
   const dbName = `academy_db_${uuid.v4()}`
@@ -72,6 +73,23 @@ test('get all images', async t => {
   let result = await db.getImages()
 
   t.is(result.length, created.length)
+})
+
+test('save user in database', async t => {
+  let db = t.context.db
+
+  t.is(typeof db.saveUser, 'function', 'saveUser is function')
+
+  let user = fixtures.getUser()
+  let plainPassword = user.password
+  let created = await db.saveUser(user)
+
+  t.is(user.name, created.name)
+  t.is(user.username, created.username)
+  t.is(user.email, created.email)
+  t.is(utils.encrypt(plainPassword), created.password)
+  t.is(typeof created.id, 'string')
+  t.truthy(created.createdAt)
 })
 
 test.afterEach.always('cleanup database', async t => {

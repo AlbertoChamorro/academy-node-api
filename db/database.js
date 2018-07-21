@@ -158,6 +158,33 @@ class Database {
 
     return Promise.resolve(task()).asCallback(callback)
   }
+
+  saveUser (user, callback) {
+    if (!this.connected) {
+      return Promise.reject(new Error('not connected')).asCallback(callback)
+    }
+
+    const _self = this
+
+    let tasks = co.wrap(function * () {
+      let connect = yield _self.connection
+      user.createdAt = new Date()
+      user.password = utils.encrypt(user.password)
+
+      let result = yield r.db(_self.dbName).table('users').insert(user).run(connect)
+
+      if (result.errors > 0) {
+        return Promise.reject(new Error(result.first_error))
+      }
+
+      user.id = result.generated_keys[0]
+      let created = yield r.db(_self.dbName).table('users').get(user.id).run(connect)
+
+      return Promise.resolve(created)
+    })
+
+    return Promise.resolve(tasks()).asCallback(callback)
+  }
 }
 
 module.exports = Database
