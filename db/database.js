@@ -106,13 +106,13 @@ class Database {
     let tasks = co.wrap(function * () {
       let connect = yield _self.connection
 
-      let image = yield r.db(_self.dbName).table('images').get(imageId).run(connect)
+      let image = yield _self.getImage(id)
       yield r.db(_self.dbName).table('images').get(imageId).update({
         likes: image.likes + 1,
         liked: true
       }).run(connect)
 
-      let created = yield r.db(_self.dbName).table('images').get(imageId).run(connect)
+      let created = yield _self.getImage(id)
 
       return Promise.resolve(created)
     })
@@ -131,6 +131,10 @@ class Database {
     let task = co.wrap(function * () {
       let connect = yield _self.connection
       let image = r.db(_self.dbName).table('images').get(imageId).run(connect)
+
+      if (!image) {
+        return Promise.reject(new Error(`image ${id} not found`))
+      }
 
       return Promise.resolve(image)
     })
@@ -202,7 +206,13 @@ class Database {
         index: 'username'
       }).run(connect)
 
-      let result = yield users.next()
+      let result = null
+      try {
+        result = yield users.next()
+      } catch (ex) {
+        return Promise.reject(new Error(`user with nameuser ${username} not found`))
+      }
+
       return Promise.resolve(result)
     })
 
@@ -216,7 +226,13 @@ class Database {
 
     const _self = this
     let tasks = co.wrap(function * () {
-      let user = yield _self.getUser(username)
+      let user = null
+      try {
+        user = yield _self.getUser(username)
+      } catch (ex) {
+        return Promise.resolve(false)
+      }
+
       if (user.password === utils.encrypt(password)) {
         return Promise.resolve(true)
       }
