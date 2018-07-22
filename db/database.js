@@ -130,7 +130,7 @@ class Database {
 
     let task = co.wrap(function * () {
       let connect = yield _self.connection
-      let image = r.db(_self.dbName).table('images').get(imageId).run(connect)
+      let image = yield r.db(_self.dbName).table('images').get(imageId).run(connect)
 
       if (!image) {
         return Promise.reject(new Error(`image ${id} not found`))
