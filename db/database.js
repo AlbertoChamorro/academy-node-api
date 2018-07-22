@@ -208,6 +208,24 @@ class Database {
 
     return Promise.resolve(tasks()).asCallback(callback)
   }
+
+  authenticate (username, password, callback) {
+    if (!this.connected) {
+      return Promise.reject(new Error('not connected')).asCallback(callback)
+    }
+
+    const _self = this
+    let tasks = co.wrap(function * () {
+      let user = yield _self.getUser(username)
+      if (user.password === utils.encrypt(password)) {
+        return Promise.resolve(true)
+      }
+
+      return Promise.resolve(false)
+    })
+
+    return Promise.resolve(tasks()).asCallback(callback)
+  }
 }
 
 module.exports = Database
