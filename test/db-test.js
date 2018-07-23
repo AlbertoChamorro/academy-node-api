@@ -59,9 +59,7 @@ test('get image', async t => {
   let result = await db.getImage(created.public_id)
 
   t.deepEqual(created, result)
-  setTimeout(() => {
-    t.throws(db.getImage('foo'), /not found/)
-  }, 500)
+  await t.throws(db.getImage('foo'), /not found/)
 })
 
 test('get all images', async t => {
@@ -97,18 +95,14 @@ test('save user in database', async t => {
 
 test('get user in database', async t => {
   let db = t.context.db
-
   t.is(typeof db.getUser, 'function', 'getUser is function')
 
   let user = fixtures.getUser()
   let created = await db.saveUser(user)
-
   let result = await db.getUser(created.username)
 
   t.deepEqual(created, result)
-  setTimeout(() => {
-    t.throws(db.getUser('foo'), /not found/)
-  }, 500)
+  await t.throws(db.getUser('foo'), /not found/)
 })
 
 test('authenticate user', async t => {
