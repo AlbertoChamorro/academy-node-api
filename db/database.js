@@ -264,6 +264,29 @@ class Database {
 
     return Promise.resolve(tasks()).asCallback(callback)
   }
+
+  getImageByTag (tag, callback) {
+    if (!this.connected) {
+      return Promise.reject(new Error('not connected')).asCallback(callback)
+    }
+
+    const _self = this
+    tag = utils.normalize(tag)
+
+    let tasks = co.wrap(function * () {
+      let conn = yield _self.connection
+
+      yield r.db(_self.dbName).table('images').indexWait().run(conn)
+      let images = yield r.db(_self.dbName).table('images').filter(img => {
+        return img('tags').contains(tag)
+      }).orderBy(r.desc('createdAt')).run(conn)
+
+      let result = images.toArray()
+      return Promise.resolve(result)
+    })
+
+    return Promise.resolve(tasks()).asCallback(callback)
+  }
 }
 
 module.exports = Database
