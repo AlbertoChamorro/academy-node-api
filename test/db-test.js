@@ -9,7 +9,7 @@ const utils = require('../common/utils')
 
 test.beforeEach('init database', async t => {
   const dbName = `academy_db_${uuid.v4()}`
-  const db = new Database({ db: dbName })
+  const db = new Database({ db: dbName, setup: true })
   t.context.db = db
   t.context.dbName = dbName
 

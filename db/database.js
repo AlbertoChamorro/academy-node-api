@@ -9,7 +9,8 @@ const utils = require('../common/utils')
 const defaults = {
   host: 'localhost',
   port: 28015,
-  db: 'academy_db'
+  db: 'academy_db',
+  setup: false
 }
 
 class Database {
@@ -17,6 +18,7 @@ class Database {
     this.host = options.host || defaults.host
     this.port = options.port || defaults.port
     this.dbName = options.db || defaults.db
+    this.setup = options.setup || defaults.setup
   }
 
   connect (callback) {
@@ -26,7 +28,11 @@ class Database {
       port: _self.port
     })
 
-    this.connected = true
+    _self.connected = true
+
+    if (!_self.setup) {
+      return Promise.resolve(_self.connection).asCallback(callback)
+    }
 
     const setup = co.wrap(function * () {
       let connect = yield _self.connection
