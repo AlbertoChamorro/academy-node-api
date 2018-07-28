@@ -32,10 +32,10 @@ test('save image', async t => {
     'awesome',
     '123store'
   ])
-  t.is(created.user_id, image.user_id)
+  t.is(created.userId, image.userId)
   t.is(typeof created.id, 'string')
 
-  t.is(created.public_id, uuid.encode(created.id))
+  t.is(created.publicId, uuid.encode(created.id))
   t.truthy(created.createdAt)
 })
 
@@ -44,7 +44,7 @@ test('like to image', async t => {
   t.is(typeof db.likeImage, 'function', 'likeImage is function')
   let image = fixtures.getImage()
   let created = await db.saveImage(image)
-  let result = await db.likeImage(created.public_id)
+  let result = await db.likeImage(created.publicId)
 
   t.true(result.liked)
   t.is(result.likes, image.likes + 1)
@@ -56,7 +56,7 @@ test('get image', async t => {
 
   let image = fixtures.getImage()
   let created = await db.saveImage(image)
-  let result = await db.getImage(created.public_id)
+  let result = await db.getImage(created.publicId)
 
   t.deepEqual(created, result)
   await t.throws(db.getImage('foo'), /not found/)
@@ -122,6 +122,29 @@ test('authenticate user', async t => {
 
   let failure = await db.authenticate('foo', 'test')
   t.false(failure)
+})
+
+test('list image by user', async t => {
+  let db = t.context.db
+  t.is(typeof db.getImageByUser, 'function', 'getImageByUser is function')
+
+  let images = fixtures.getImages(10)
+  let userId = uuid.uuid()
+  let random = Math.round(Math.random() * images.length)
+  console.log(`randomo ${random}`)
+  let saveImages = []
+
+  for (let i = 0; i < images.length; i++) {
+    if (i < random) {
+      images[i].userId = userId
+    }
+    saveImages.push(db.saveImage(images[i]))
+  }
+
+  await Promise.all(saveImages)
+
+  let result = await db.getImageByUser(userId)
+  t.is(result.length, random)
 })
 
 test.afterEach.always('cleanup database', async t => {
