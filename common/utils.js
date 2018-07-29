@@ -1,4 +1,5 @@
 'use strict'
+const crypto = require('crypto')
 
 const utils = {}
 
@@ -17,6 +18,12 @@ utils.normalize = function (text) {
   let lowerCaseText = text.toLowerCase()
   let normalizeText = lowerCaseText.replace(/#/g, '')
   return normalizeText
+}
+
+utils.encrypt = function (password) {
+  let shasum = crypto.createHash('sha256')
+  shasum.update(password)
+  return shasum.digest('hex')
 }
 
 module.exports = utils

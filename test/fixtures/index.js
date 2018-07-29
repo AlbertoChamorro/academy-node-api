@@ -9,7 +9,7 @@ const fixtures = {
       url: `http://programaenlinea.net/wp-content/uploads/2018/02/${uuid.uuid()}.jpg`,
       likes: 0,
       liked: false,
-      user_id: uuid.uuid()
+      userId: uuid.uuid()
     }
   },
   getImages (count) {
@@ -18,6 +18,14 @@ const fixtures = {
       images.push(this.getImage())
     }
     return images
+  },
+  getUser () {
+    return {
+      name: 'A random user',
+      username: `user_${uuid.v4()}`,
+      password: uuid.v4(),
+      email: `${uuid.v4()}@gmail.test`
+    }
   }
 }
 

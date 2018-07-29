@@ -9,7 +9,8 @@ const utils = require('../common/utils')
 const defaults = {
   host: 'localhost',
   port: 28015,
-  db: 'academy_db'
+  db: 'academy_db',
+  setup: false
 }
 
 class Database {
@@ -17,6 +18,7 @@ class Database {
     this.host = options.host || defaults.host
     this.port = options.port || defaults.port
     this.dbName = options.db || defaults.db
+    this.setup = options.setup || defaults.setup
   }
 
   connect (callback) {
@@ -26,7 +28,11 @@ class Database {
       port: _self.port
     })
 
-    this.connected = true
+    _self.connected = true
+
+    if (!_self.setup) {
+      return Promise.resolve(_self.connection).asCallback(callback)
+    }
 
     const setup = co.wrap(function * () {
       let connect = yield _self.connection
@@ -41,10 +47,12 @@ class Database {
       if (dbTables.indexOf('images') === -1) {
         yield r.db(_self.dbName).tableCreate('images').run(connect)
         yield r.db(_self.dbName).table('images').indexCreate('createdAt').run(connect)
+        yield r.db(_self.dbName).table('images').indexCreate('userId', { multi: true }).run(connect)
       }
 
       if (dbTables.indexOf('users') === -1) {
         yield r.db(_self.dbName).tableCreate('users').run(connect)
+        yield r.db(_self.dbName).table('users').indexCreate('username').run(connect)
       }
 
       return connect
@@ -83,7 +91,7 @@ class Database {
 
       image.id = result.generated_keys[0]
       yield r.db(_self.dbName).table('images').get(image.id).update({
-        public_id: uuid.encode(image.id)
+        publicId: uuid.encode(image.id)
       }).run(connect)
 
       let created = yield r.db(_self.dbName).table('images').get(image.id).run(connect)
@@ -105,13 +113,13 @@ class Database {
     let tasks = co.wrap(function * () {
       let connect = yield _self.connection
 
-      let image = yield r.db(_self.dbName).table('images').get(imageId).run(connect)
+      let image = yield _self.getImage(id)
       yield r.db(_self.dbName).table('images').get(imageId).update({
         likes: image.likes + 1,
         liked: true
       }).run(connect)
 
-      let created = yield r.db(_self.dbName).table('images').get(imageId).run(connect)
+      let created = yield _self.getImage(id)
 
       return Promise.resolve(created)
     })
@@ -129,7 +137,11 @@ class Database {
 
     let task = co.wrap(function * () {
       let connect = yield _self.connection
-      let image = r.db(_self.dbName).table('images').get(imageId).run(connect)
+      let image = yield r.db(_self.dbName).table('images').get(imageId).run(connect)
+
+      if (!image) {
+        return Promise.reject(new Error(`image ${id} not found`))
+      }
 
       return Promise.resolve(image)
     })
@@ -157,6 +169,129 @@ class Database {
     })
 
     return Promise.resolve(task()).asCallback(callback)
+  }
+
+  saveUser (user, callback) {
+    if (!this.connected) {
+      return Promise.reject(new Error('not connected')).asCallback(callback)
+    }
+
+    const _self = this
+
+    let tasks = co.wrap(function * () {
+      let connect = yield _self.connection
+      user.createdAt = new Date()
+      user.password = utils.encrypt(user.password)
+
+      let result = yield r.db(_self.dbName).table('users').insert(user).run(connect)
+
+      if (result.errors > 0) {
+        return Promise.reject(new Error(result.first_error))
+      }
+
+      user.id = result.generated_keys[0]
+      let created = yield r.db(_self.dbName).table('users').get(user.id).run(connect)
+
+      return Promise.resolve(created)
+    })
+
+    return Promise.resolve(tasks()).asCallback(callback)
+  }
+
+  getUser (username, callback) {
+    if (!this.connected) {
+      return Promise.reject(new Error('not connected')).asCallback(callback)
+    }
+
+    const _self = this
+
+    let tasks = co.wrap(function * () {
+      let connect = yield _self.connection
+
+      yield r.db(_self.dbName).table('users').indexWait().run(connect)
+      let users = yield r.db(_self.dbName).table('users').getAll(username, {
+        index: 'username'
+      }).run(connect)
+
+      let result = null
+      try {
+        result = yield users.next()
+      } catch (ex) {
+        return Promise.reject(new Error(`user with nameuser ${username} not found`))
+      }
+
+      return Promise.resolve(result)
+    })
+
+    return Promise.resolve(tasks()).asCallback(callback)
+  }
+
+  authenticate (username, password, callback) {
+    if (!this.connected) {
+      return Promise.reject(new Error('not connected')).asCallback(callback)
+    }
+
+    const _self = this
+    let tasks = co.wrap(function * () {
+      let user = null
+      try {
+        user = yield _self.getUser(username)
+      } catch (ex) {
+        return Promise.resolve(false)
+      }
+
+      if (user.password === utils.encrypt(password)) {
+        return Promise.resolve(true)
+      }
+
+      return Promise.resolve(false)
+    })
+
+    return Promise.resolve(tasks()).asCallback(callback)
+  }
+
+  getImageByUser (id, callback) {
+    if (!this.connected) {
+      return Promise.reject(new Error('not connected')).asCallback(callback)
+    }
+
+    const _self = this
+    let tasks = co.wrap(function * () {
+      let conn = yield _self.connection
+
+      yield r.db(_self.dbName).table('images').indexWait().run(conn)
+      let images = yield r.db(_self.dbName).table('images').getAll(id, {
+        index: 'userId'
+      }).orderBy(r.desc('createdAt')).run(conn)
+
+      let result = images.toArray()
+      return Promise.resolve(result)
+    })
+
+    return Promise.resolve(tasks()).asCallback(callback)
+  }
+
+  getImageByTag (tag, callback) {
+    if (!this.connected) {
+      return Promise.reject(new Error('not connected')).asCallback(callback)
+    }
+
+    const _self = this
+    tag = utils.normalize(tag)
+
+    let tasks = co.wrap(function * () {
+      let conn = yield _self.connection
+
+      yield r.db(_self.dbName).table('images').indexWait().run(conn)
+      let images = yield r.db(_self.dbName).table('images').filter(img => {
+        return img('tags').contains(tag)
+      }).orderBy(r.desc('createdAt')).run(conn)
+
+      let result = images.toArray()
+      return Promise.resolve(result)
+    })
+
+    return Promise.resolve(tasks()).asCallback(callback)
   }
 }
 
