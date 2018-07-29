@@ -2,7 +2,6 @@
   "name": "academy-node-db",
   "version": "1.0.0",
   "description": "creacion e interaccion con la base de datos para el proyecto",
-  "main": "index.js",
   "scripts": {
     "lint": "standard --fix",
     "test": "npm run lint && ava"
@@ -12,14 +11,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/AlbertoChamorro/academy-node-api.git"
+    "url": "git+https://github.com/AlbertoChamorro/academy-node-backend.git"
   },
   "author": "@AlbertoChamorro",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/AlbertoChamorro/academy-node-db/issues"
+    "url": "https://github.com/AlbertoChamorro/academy-node-backend/issues"
   },
-  "homepage": "https://github.com/AlbertoChamorro/academy-node-db#readme",
+  "homepage": "https://github.com/AlbertoChamorro/academy-node-backend#readme",
   "devDependencies": {
     "ava": "^0.25.0",
     "standard": "^11.0.1"
