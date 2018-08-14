@@ -1,1 +1,1 @@
-# academy-node-api
+# testUnit-nodeJS-rethinkdb
